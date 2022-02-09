@@ -25,7 +25,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <spnav.h>
-#include "ui.h"
 
 #define CHK_AXINV_TRANS_X			"axinv_trans_x"
 #define CHK_AXINV_TRANS_Y			"axinv_trans_y"
@@ -206,7 +205,7 @@ static void create_ui(void)
 	GtkBuilder *gtk_builder;
 
 	gtk_builder = gtk_builder_new();
-	gtk_builder_add_from_string(gtk_builder, (gchar*)ui_xml, -1, NULL);
+	gtk_builder_add_from_file(gtk_builder, PKGDATADIR "/main.ui", NULL);
 
 	widgets.win = GTK_WIDGET(gtk_builder_get_object(gtk_builder, "main"));
 

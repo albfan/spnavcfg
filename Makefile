@@ -1,0 +1,56 @@
+PREFIX = /usr/local
+srcdir = .
+dbg = -g
+opt = -O3
+obj = spnavcfg.o front_gtk.o back.o cfgfile.o
+dep = $(obj:.o=.d)
+bin = spnavcfg
+
+warn = -Wall
+
+CC = gcc
+SED = sed
+INSTALL = install
+CFLAGS = -pedantic $(warn) $(dbg) $(opt) `pkg-config --cflags gtk+-2.0 gmodule-export-2.0` \
+		 $(add_cflags)
+LDFLAGS = `pkg-config --libs gtk+-2.0 gmodule-export-2.0` -lX11 $(add_ldflags)
+
+$(bin): $(obj)
+	$(CC) -o $@ $(obj) $(LDFLAGS)
+
+-include $(dep)
+
+%.o: $(srcdir)/%.c | $(srcdir)/ui.h
+	$(CC) $(CFLAGS) -c $< -o $@
+	$(CPP) $(CFLAGS) $< -MM -MT $@ >$(@:.o=.d)
+
+$(srcdir)/ui.h: $(srcdir)/ui/ui.xml
+	echo 'static const char *ui_xml =' >$@
+	$(SED) 's/"/\\"/g; s/^.*$$/	"&\\n"/' $< >>$@
+	echo ';' >>$@
+
+.PHONY: clean
+clean:
+	rm -f $(obj) $(bin) $(srcdir)/ui.h
+
+.PHONY: install
+install:
+	$(INSTALL) -d $(DESTDIR)$(PREFIX)/bin
+	$(INSTALL) -m 4775 $(bin) $(DESTDIR)$(PREFIX)/bin/$(bin)
+	for i in 48 128 256; do \
+		destdir=$(DESTDIR)$(PREFIX)/share/icons/hicolor/$${i}x$${i}/apps; \
+		mkdir -p $$destdir; \
+		cp icons/spnavcfg-$${i}x$${i}.png $$destdir/spnavcfg.png; \
+	done
+	mkdir -p $(DESTDIR)$(PREFIX)/share/applications
+	cp -a icons/spnavcfg.desktop $(DESTDIR)$(PREFIX)/share/applications/
+
+
+.PHONY: uninstall
+uninstall:
+	rm -f $(DESTDIR)$(PREFIX)/bin/$(bin)
+	for i in 48 128 256; do \
+		destdir=$(DESTDIR)$(PREFIX)/share/icons/hicolor/$${i}x$${i}/apps; \
+		rm -f $${destdir}/spnavcfg.png; \
+	done
+	rm -f $(DESTDIR)$(PREFIX)/share/applications/spnavcfg.desktop
